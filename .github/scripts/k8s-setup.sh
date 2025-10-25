@@ -107,8 +107,12 @@ init_kubeadm_cluster() {
     local runtime="${1:-containerd}"
     echo "🚀 Initializing Kubernetes cluster..."
     local cri_socket="unix:///run/containerd/containerd.sock"
-    [ "$runtime" = "crio" ] && cri_socket="unix:///var/run/crio/crio.sock"
-    sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --cri-socket="$cri_socket"
+    local pod_network_args="--pod-network-cidr=10.244.0.0/16"
+    if [ "$runtime" = "crio" ]; then
+        cri_socket="unix:///var/run/crio/crio.sock"
+	pod_network_args=""
+    fi
+    sudo kubeadm init --cri-socket="$cri_socket" $pod_network_args
     mkdir -p "$HOME/.kube" && sudo cp -i /etc/kubernetes/admin.conf "$HOME/.kube/config"
     sudo chown "$(id -u):$(id -g)" "$HOME/.kube/config"
     echo "✅ Cluster initialized"
@@ -195,7 +199,8 @@ setup_kubeadm() {
     local runtime="${1:-containerd}" version="${2:-latest}"
     free_disk_space && prepare_system_kubeadm
     [ "$runtime" = "containerd" ] && install_containerd "$version" || install_crio
-    install_kubeadm_components && init_kubeadm_cluster "$runtime" && install_flannel
+    install_kubeadm_components && init_kubeadm_cluster "$runtime"
+    [ "$runtime" = "containerd" ] && install_flannel
     verify_cluster "kubeadm"
 }
 
