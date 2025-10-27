@@ -75,6 +75,16 @@ install_crio() {
     curl -fsSL https://download.opensuse.org/repositories/isv:/cri-o:/stable:/${crio_ver}/deb/Release.key | sudo gpg --batch --yes --no-tty --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
     echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://download.opensuse.org/repositories/isv:/cri-o:/stable:/${crio_ver}/deb/ /" | sudo tee /etc/apt/sources.list.d/cri-o.list
     sudo apt-get update && sudo apt-get install -y cri-o cri-tools
+
+    # FIDENCIO | DEBUG
+    ls -la /etc/cni/net.d/
+    sudo rm -f /etc/cni/net.d/100-crio-bridge.conf
+    sudo rm -f /etc/cni/net.d/100-crio-bridge.conflist
+    sudo rm -f /etc/cni/net.d/200-loopback.conf
+    sudo apt-get install -y containernetworking-plugins
+    ls -la /opt/cni/bin/
+    # FIDENCIO | DEBUG
+
     sudo mkdir -p /etc/crio/crio.conf.d/
     cat | sudo tee /etc/crio/crio.conf.d/00-default-capabilities.conf > /dev/null <<EOF
 [crio]
@@ -108,11 +118,8 @@ init_kubeadm_cluster() {
     echo "🚀 Initializing Kubernetes cluster..."
     local cri_socket="unix:///run/containerd/containerd.sock"
     local pod_network_args="--pod-network-cidr=10.244.0.0/16"
-    if [ "$runtime" = "crio" ]; then
-        cri_socket="unix:///var/run/crio/crio.sock"
-	pod_network_args=""
-    fi
-    sudo kubeadm init --cri-socket="$cri_socket" $pod_network_args
+    [ "$runtime" = "crio" ] && cri_socket="unix:///var/run/crio/crio.sock"
+    sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --cri-socket="$cri_socket"
     mkdir -p "$HOME/.kube" && sudo cp -i /etc/kubernetes/admin.conf "$HOME/.kube/config"
     sudo chown "$(id -u):$(id -g)" "$HOME/.kube/config"
     echo "✅ Cluster initialized"
