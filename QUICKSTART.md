@@ -6,7 +6,7 @@ Get started with Confidential Containers on your architecture in just a few comm
 
 - Kubernetes 1.24+
 - Helm 3.8+
-- Container runtime with RuntimeClass support (containerd or CRI-O)
+- Container runtime with RuntimeClass support (containerd)
 - Hardware with TEE support (for production use)
 
 ## Installation
