@@ -8,10 +8,18 @@ on:
       - reopened
       - synchronize
   workflow_dispatch:
+  schedule:
+    # Run nightly at 00:00 UTC
+    - cron: '0 0 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
 
 jobs:
   check-changes:
@@ -31,10 +39,14 @@ jobs:
         run: |
           echo "🔍 Checking if production kata-deploy dependency version in Chart.yaml changed..."
           
-          # For workflow_dispatch, always run (set to true)
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          # For workflow_dispatch and schedule, always run (set to true)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ github.event_name }}" = "schedule" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
-            echo "ℹ️  Manual trigger - will run all tests"
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              echo "ℹ️  Manual trigger - will run all tests"
+            else
+              echo "ℹ️  Scheduled nightly run - will run all tests"
+            fi
             exit 0
           fi
           
@@ -66,10 +78,14 @@ jobs:
         run: |
           echo "🔍 Checking if templates/values changed..."
           
-          # For workflow_dispatch, always run (set to true)
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          # For workflow_dispatch and schedule, always run (set to true)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ github.event_name }}" = "schedule" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
-            echo "ℹ️  Manual trigger - will run all tests"
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              echo "ℹ️  Manual trigger - will run all tests"
+            else
+              echo "ℹ️  Scheduled nightly run - will run all tests"
+            fi
             exit 0
           fi
           
@@ -834,4 +850,107 @@ jobs:
             exit 1
           fi
           echo "✅ All E2E tests passed or were skipped as expected"
+
+  create-issue-on-failure:
+    name: Create Issue on E2E Failure
+    runs-on: ubuntu-24.04
+    needs: [e2e-tests]
+    if: |
+      always() &&
+      github.event_name == 'schedule' &&
+      (needs.e2e-tests.result == 'failure' || needs.e2e-tests.result == 'cancelled')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for existing issue
+        id: check-issue
+        run: |
+          echo "🔍 Checking for existing open issues..."
+          
+          # Search for open issues with the failure label
+          EXISTING_ISSUES=$(gh issue list \
+            --repo "${{ github.repository }}" \
+            --label "nightly-e2e-failure" \
+            --state open \
+            --json number,title \
+            --jq '.[] | "\(.number):\(.title)"' || echo "")
+          
+          if [ -n "${EXISTING_ISSUES}" ]; then
+            echo "Found existing open issue(s):"
+            echo "${EXISTING_ISSUES}"
+            echo "existing=true" >> $GITHUB_OUTPUT
+            echo "issues=${EXISTING_ISSUES}" >> $GITHUB_OUTPUT
+          else
+            echo "No existing open issues found"
+            echo "existing=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create or update issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WORKFLOW_RUN_NUMBER: ${{ github.run_number }}
+          TEST_RESULT: ${{ needs.e2e-tests.result }}
+        run: |
+          if [ "${{ steps.check-issue.outputs.existing }}" = "true" ]; then
+            echo "📝 Updating existing issue..."
+            
+            # Get the first issue number
+            FIRST_ISSUE=$(echo "${{ steps.check-issue.outputs.issues }}" | head -n1 | cut -d':' -f1)
+            
+            # Add a comment to the existing issue
+            gh issue comment "${FIRST_ISSUE}" \
+              --repo "${{ github.repository }}" \
+              --body "## 🔄 Nightly E2E Tests Failed Again
+          
+          Another nightly E2E test run has failed.
+          
+          - **Workflow Run**: [\#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          - **Test Result**: \`${{ needs.e2e-tests.result }}\`
+          - **Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
+          Please investigate the failures in the workflow run linked above."
+            
+            echo "✅ Updated issue #${FIRST_ISSUE}"
+          else
+            echo "📝 Creating new issue..."
+            
+            # Create a new issue
+            gh issue create \
+              --repo "${{ github.repository }}" \
+              --title "🚨 Nightly E2E Tests Failed - $(date -u +'%Y-%m-%d')" \
+              --label "nightly-e2e-failure" \
+              --label "bug" \
+              --body "## 🚨 Nightly E2E Tests Failed
+          
+          The nightly E2E test run has failed. This issue was automatically created to track the failure.
+          
+          ### Details
+          - **Workflow Run**: [\#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          - **Test Result**: \`${{ needs.e2e-tests.result }}\`
+          - **Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          - **Branch**: \`${{ github.ref_name }}\`
+          - **Commit**: \`${{ github.sha }}\`
+          
+          ### Next Steps
+          1. Review the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) to identify the failing tests
+          2. Check the test logs for error messages
+          3. Investigate if this is a regression or an environmental issue
+          4. Fix the issue and verify tests pass
+          5. Close this issue once resolved
+          
+          ### Test Coverage
+          The E2E tests cover:
+          - Multiple Kubernetes distributions (k3s, k0s, rke2, microk8s, kubeadm)
+          - Different image pull modes (nydus-snapshotter, experimental-force-guest-pull)
+          - CI and standard deployment variants
+          - Containerd upgrade scenarios
+          
+          ---
+          
+          *This issue was automatically created by the nightly E2E test workflow.*"
+            
+            echo "✅ Created new issue"
+          fi
 
