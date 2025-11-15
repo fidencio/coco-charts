@@ -7,10 +7,32 @@
 architecture: s390x
 
 kata-as-coco-runtime:
-  env:
-    debug: "true"
-    shims: "qemu-coco-dev qemu-se"
-    snapshotterHandlerMapping: "qemu-coco-dev:nydus,qemu-se:nydus"
+  debug: true
+
+  snapshotter:
+    setup: ["nydus"]
+
+  shims:
+    qemu-coco-dev:
+      enabled: true
+      supportedArches:
+        - amd64
+        - s390x
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
+
+    qemu-se:
+      enabled: true
+      supportedArches:
+        - s390x
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
   
   # Only deploy on worker nodes with specific label
   nodeSelector:
@@ -22,27 +44,97 @@ kata-as-coco-runtime:
 architecture: x86_64
 
 kata-as-coco-runtime:
-  env:
-    debug: "false"
-    shims: "qemu-snp qemu-tdx qemu-coco-dev"
-    snapshotterHandlerMapping: "qemu-snp:nydus,qemu-tdx:nydus,qemu-coco-dev:nydus"
-    
-    # Use proxy for guest agent
-    agentHttpsProxy: "http://proxy.example.com:8080"
-    agentNoProxy: "localhost,127.0.0.1"
+  debug: false
+  
+  snapshotter:
+    setup: ["nydus"]
+
+  shims:
+    qemu-snp:
+      enabled: true
+      supportedArches:
+        - amd64
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
+      agent:
+        httpsProxy: "http://proxy.example.com:8080"
+        noProxy: "localhost,127.0.0.1"
+
+    qemu-tdx:
+      enabled: true
+      supportedArches:
+        - amd64
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
+      agent:
+        httpsProxy: "http://proxy.example.com:8080"
+        noProxy: "localhost,127.0.0.1"
+
+    qemu-coco-dev:
+      enabled: true
+      supportedArches:
+        - amd64
+        - s390x
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
+      agent:
+        httpsProxy: "http://proxy.example.com:8080"
+        noProxy: "localhost,127.0.0.1"
 
 ---
-# Example 3: x86_64 with custom image and all shims
+# Example 3: x86_64 with custom image and selected shims
+# Note: qemu-nvidia-gpu-snp and qemu-nvidia-gpu-tdx are not in our standard set
+# This example shows the shims we expose: qemu-snp, qemu-tdx, qemu-coco-dev
 architecture: x86_64
 
 kata-as-coco-runtime:
   image:
     reference: quay.io/kata-containers/kata-deploy
+  debug: true
   
-  env:
-    debug: "true"
-    shims: "qemu-coco-dev qemu-snp qemu-tdx qemu-nvidia-gpu-snp qemu-nvidia-gpu-tdx"
-    snapshotterHandlerMapping: "qemu-coco-dev:nydus,qemu-snp:nydus,qemu-tdx:nydus,qemu-nvidia-gpu-snp:nydus,qemu-nvidia-gpu-tdx:nydus"
+  snapshotter:
+    setup: ["nydus"]
+  
+  shims:
+    qemu-snp:
+      enabled: true
+      supportedArches:
+        - amd64
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
+  
+    qemu-tdx:
+      enabled: true
+      supportedArches:
+        - amd64
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
+  
+    qemu-coco-dev:
+      enabled: true
+      supportedArches:
+        - amd64
+        - s390x
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
     
   # Deploy on GPU nodes only
   nodeSelector:
@@ -53,10 +145,22 @@ kata-as-coco-runtime:
 architecture: x86_64
 
 kata-as-coco-runtime:
+  debug: true
   env:
-    debug: "true"
-    shims: "qemu-snp"
-    snapshotterHandlerMapping: "qemu-snp:nydus"
     multiInstallSuffix: "snp-only"
+
+  snapshotter:
+    setup: ["nydus"]
+
+  shims:
+    qemu-snp:
+      enabled: true
+      supportedArches:
+        - amd64
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
 
 

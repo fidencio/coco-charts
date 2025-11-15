@@ -53,7 +53,7 @@ customContainerd:
 #   imagePullSecrets: [{"name": "my-secret"}]
 #   k8sDistribution: k8s (default) | k3s | rke2 | k0s | microk8s
 #   nodeSelector: {"key": "value"}
-#   env.debug: "true" | "false" (default)
+#   debug: true | false (default)
 #
 # Advanced customizations (kata-deploy specific options):
 #   image.tag: Override image tag (uses chart's appVersion by default)
@@ -81,17 +81,90 @@ kata-as-coco-runtime:
   enabled: true
   imagePullPolicy: Always
   k8sDistribution: k8s
+  debug: false
 
   env:
-    debug: "false"
-    # Deploy TEE-enabled runtime shims for x86_64
-    # For other architectures, use the appropriate values file:
-    #   - values/kata-s390x.yaml for IBM Z
-    #   - values/kata-aarch64.yaml for ARM64
-    #   - values/kata-remote.yaml for peer-pods
-    defaultShim: ""
-    shims: "qemu-coco-dev qemu-snp qemu-tdx qemu-nvidia-gpu-snp qemu-nvidia-gpu-tdx"
-    snapshotterHandlerMapping: "qemu-coco-dev:nydus,qemu-snp:nydus,qemu-tdx:nydus,qemu-nvidia-gpu-snp:nydus,qemu-nvidia-gpu-tdx:nydus"
-    pullTypeMapping: "qemu-coco-dev:guest-pull,qemu-snp:guest-pull,qemu-tdx:guest-pull,qemu-nvidia-gpu-snp:guest-pull,qemu-nvidia-gpu-tdx:guest-pull"
-    _experimentalSetupSnapshotter: "nydus"
-    _experimentalForceGuestPull: ""
+    # Set default shim for backward compatibility (structured format takes precedence)
+    defaultShim: "qemu-snp"
+
+  # Deploy TEE-enabled runtime shims for x86_64
+  # For other architectures, use the appropriate values file:
+  #   - values/kata-s390x.yaml for IBM Z
+  #   - values/kata-aarch64.yaml for ARM64
+  #   - values/kata-remote.yaml for peer-pods
+
+  # Snapshotter configuration
+  snapshotter:
+    setup: ["nydus"]
+
+  # TEE (Trusted Execution Environment) shims configuration
+  # Only enable the shims we want to expose, explicitly disable all others
+  shims:
+    # Enabled shims - TEE shims we want to expose
+    qemu-snp:
+      enabled: true
+      supportedArches:
+        - amd64
+      allowedHypervisorAnnotations: []
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
+      agent:
+        httpsProxy: ""
+        noProxy: ""
+
+    qemu-tdx:
+      enabled: true
+      supportedArches:
+        - amd64
+      allowedHypervisorAnnotations: []
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
+      agent:
+        httpsProxy: ""
+        noProxy: ""
+
+    qemu-coco-dev:
+      enabled: true
+      supportedArches:
+        - amd64
+        - s390x
+      allowedHypervisorAnnotations: []
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
+      agent:
+        httpsProxy: ""
+        noProxy: ""
+
+    qemu-coco-dev-runtime-rs:
+      enabled: true
+      supportedArches:
+        - amd64
+        - s390x
+      allowedHypervisorAnnotations: []
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
+      agent:
+        httpsProxy: ""
+        noProxy: ""
+
+  # RuntimeClasses configuration
+  runtimeClasses:
+    enabled: true
+    createDefault: false
+    defaultName: "kata"
+
+  # Default shim per architecture
+  defaultShim:
+    amd64: qemu-snp
