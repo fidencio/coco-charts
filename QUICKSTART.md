@@ -40,17 +40,6 @@ helm install coco oci://ghcr.io/confidential-containers/charts/confidential-cont
 - IBM Secure Execution (kata-qemu-se)
 - Development runtime (kata-qemu-coco-dev)
 
-#### For aarch64 (ARM64)
-
-```bash
-helm install coco oci://ghcr.io/confidential-containers/charts/confidential-containers \
-  -f https://raw.githubusercontent.com/confidential-containers/charts/main/values/kata-aarch64.yaml \
-  --namespace coco-system
-```
-
-**What you get:**
-- Development runtime (kata-qemu-coco-dev)
-
 #### For remote (peer-pods)
 
 ```bash
@@ -78,8 +67,6 @@ cd charts
 helm install coco . --namespace coco-system  # x86_64
 # OR
 helm install coco . -f values/kata-s390x.yaml --namespace coco-system  # s390x
-# OR
-helm install coco . -f values/kata-aarch64.yaml --namespace coco-system  # aarch64
 ```
 
 ## Verify Installation
@@ -478,11 +465,6 @@ helm list -n coco-system
 
 - Requires IBM Z15 or newer with Secure Execution support
 - Ensure the host kernel has SE support enabled
-
-### aarch64
-
-- Currently only development runtime is available
-- TEE support coming soon
 
 ### peer-pods
 

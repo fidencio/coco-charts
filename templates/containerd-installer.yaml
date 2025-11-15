@@ -49,7 +49,6 @@ spec:
           NODE_ARCH=$(uname -m)
           case "${NODE_ARCH}" in
             x86_64) ARCH="amd64" ;;
-            aarch64) ARCH="arm64" ;;
             s390x) ARCH="s390x" ;;
             ppc64le) ARCH="ppc64le" ;;
             *)
@@ -91,9 +90,6 @@ spec:
           {{- if .Values.customContainerd.tarballUrls }}
           {{- if .Values.customContainerd.tarballUrls.amd64 }}
           [ "${ARCH}" = "amd64" ] && TARBALL_URL="{{ .Values.customContainerd.tarballUrls.amd64 }}"
-          {{- end }}
-          {{- if .Values.customContainerd.tarballUrls.arm64 }}
-          [ "${ARCH}" = "arm64" ] && TARBALL_URL="{{ .Values.customContainerd.tarballUrls.arm64 }}"
           {{- end }}
           {{- if .Values.customContainerd.tarballUrls.s390x }}
           [ "${ARCH}" = "s390x" ] && TARBALL_URL="{{ .Values.customContainerd.tarballUrls.s390x }}"

@@ -2,7 +2,6 @@
 # This file provides x86_64 architecture defaults.
 # For other architectures, use:
 #   - values/kata-s390x.yaml for IBM Z
-#   - values/kata-aarch64.yaml for ARM64
 #   - values/kata-remote.yaml for peer-pods
 
 # Architecture label (for NOTES template)
@@ -28,10 +27,9 @@ customContainerd:
   # The tarball should extract to bin/containerd, bin/containerd-shim-runc-v2, etc.
   tarballUrl: ""
   # Multi-arch tarball URLs (takes precedence over tarballUrl if specified)
-  # Supported architectures: amd64, arm64, s390x, ppc64le
+  # Supported architectures: amd64, s390x, ppc64le
   tarballUrls:
     amd64: ""
-    arm64: ""
     s390x: ""
   # Image used for the installer Job (should have wget, tar, sh)
   image:
@@ -90,7 +88,6 @@ kata-as-coco-runtime:
   # Deploy TEE-enabled runtime shims for x86_64
   # For other architectures, use the appropriate values file:
   #   - values/kata-s390x.yaml for IBM Z
-  #   - values/kata-aarch64.yaml for ARM64
   #   - values/kata-remote.yaml for peer-pods
 
   # Snapshotter configuration

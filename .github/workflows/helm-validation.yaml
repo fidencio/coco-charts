@@ -81,13 +81,6 @@ jobs:
             > /tmp/s390x-output.yaml
           echo "✅ s390x template renders successfully"
 
-      - name: Test aarch64 architecture
-        run: |
-          echo "🔍 Testing aarch64 architecture..."
-          helm template test-release . \
-            -f values/kata-aarch64.yaml \
-            > /tmp/aarch64-output.yaml
-          echo "✅ aarch64 template renders successfully"
 
       - name: Test remote (peer-pods) architecture
         run: |
