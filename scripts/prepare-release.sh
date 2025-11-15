@@ -173,7 +173,6 @@ setup_tools() {
     
     case "$(uname -m)" in
         x86_64)  arch="amd64" ;;
-        aarch64|arm64) arch="arm64" ;;
         *)
             error "Unsupported architecture: $(uname -m)"
             exit 1
@@ -419,7 +418,6 @@ This PR prepares the release ${new_chart_version} with updated kata-deploy depen
 - [ ] Verify kata-deploy version is correct
 - [ ] Test installation on x86_64
 - [ ] Test installation on s390x
-- [ ] Test installation on aarch64
 - [ ] Test installation for peer-pods
 - [ ] Update CHANGELOG.md (if applicable)
 - [ ] Merge this PR

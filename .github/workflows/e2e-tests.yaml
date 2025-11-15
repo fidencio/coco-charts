@@ -358,10 +358,6 @@ jobs:
               VALUES_FILE="values/kata-s390x.yaml"
               RUNTIME_CLASS_SHIM="qemu-coco-dev"  # s390x default
               ;;
-            aarch64)
-              VALUES_FILE="values/kata-aarch64.yaml"
-              RUNTIME_CLASS_SHIM="qemu-coco-dev"  # aarch64 default
-              ;;
             *)
               echo "❌ Unsupported architecture: $ARCH"
               exit 1

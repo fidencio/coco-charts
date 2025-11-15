@@ -57,8 +57,6 @@ Get the architecture display name
 {{- "x86_64" }}
 {{- else if eq .Values.architecture "s390x" }}
 {{- "s390x (IBM Z)" }}
-{{- else if eq .Values.architecture "aarch64" }}
-{{- "aarch64 (ARM64)" }}
 {{- else }}
 {{- .Values.architecture }}
 {{- end }}

@@ -51,7 +51,6 @@ This chart includes:
 The chart is published to `oci://ghcr.io/confidential-containers/charts/confidential-containers` and supports multiple architectures:
 - **x86_64**: Intel and AMD processors (default)
 - **s390x**: IBM Z mainframes
-- **aarch64**: ARM64 processors
 - **peer-pods**: architecture independent
 
 **Basic installation for x86_64:**
@@ -64,13 +63,6 @@ helm install coco oci://ghcr.io/confidential-containers/charts/confidential-cont
 ```bash
 helm install coco oci://ghcr.io/confidential-containers/charts/confidential-containers \
   -f https://raw.githubusercontent.com/confidential-containers/charts/main/values/kata-s390x.yaml \
-  --namespace coco-system
-```
-
-**For aarch64:**
-```bash
-helm install coco oci://ghcr.io/confidential-containers/charts/confidential-containers \
-  -f https://raw.githubusercontent.com/confidential-containers/charts/main/values/kata-aarch64.yaml \
   --namespace coco-system
 ```
 
@@ -104,10 +96,6 @@ For complete installation instructions, customization options, and troubleshooti
 ### s390x (IBM Z)
 
 - **IBM SE** (IBM s390x Secure Execution)
-- **Development runtime** (qemu-coco-dev for testing)
-
-### aarch64 (ARM64)
-
 - **Development runtime** (qemu-coco-dev for testing)
 
 ### peer-pods (architecture independent)
@@ -149,10 +137,6 @@ The available RuntimeClasses depend on the architecture:
 - `kata-qemu-coco-dev` - Development/testing runtime
 - `kata-qemu-se` - IBM Secure Execution
 
-#### aarch64
-
-- `kata-qemu-coco-dev` - Development/testing runtime
-
 #### peer-pods
 
 - `kata-remote`- Peer-pods
@@ -178,7 +162,6 @@ The chart provides architecture-specific kata runtime configuration files:
 
 - **values.yaml**: x86_64 defaults (SNP, TDX, and NVIDIA GPU shims)
 - **values/kata-s390x.yaml**: IBM SE shim
-- **values/kata-aarch64.yaml**: Development shim only
 - **values/kata-remote.yaml**: Peer-pods
 
 ### Key Configuration Parameters
@@ -197,7 +180,7 @@ Parameters set by architecture-specific kata runtime values files:
 
 | Parameter | Description | Set by values/kata-*.yaml |
 |-----------|-------------|---------------------------|
-| `architecture` | Architecture label for NOTES | `x86_64`, `s390x`, `aarch64`, or `remote` |
+| `architecture` | Architecture label for NOTES | `x86_64`, `s390x`, or `remote` |
 | `kata-as-coco-runtime.env.shims` | Runtime shims to install | Architecture-specific list |
 | `kata-as-coco-runtime.env.defaultShim` | Default shim if `kata` is specified in pood annotations | Architecture-specific mappings |
 | `kata-as-coco-runtime.env.snapshotterHandlerMapping` | Snapshotter handler mapping | Architecture-specific mappings |
@@ -214,12 +197,10 @@ These inherit from kata-deploy defaults but can be overridden:
 | `kata-as-coco-runtime.image.reference` | Kata deploy image | `quay.io/kata-containers/kata-deploy` |
 | `kata-as-coco-runtime.image.tag` | Kata deploy image tag | Chart's appVersion |
 | `kata-as-coco-runtime.env.shims_x86_64` | List of shims to deploy for x86_64 (if set, overrides `shims`) | `""` |
-| `kata-as-coco-runtime.env.shims_aarch64` | List of shims to deploy for aarch64 (if set, overrides `shims`) | `""` |
 | `kata-as-coco-runtime.env.shims_s390x` | List of shims to deploy for s390x (if set, overrides `shims`) | `""` |
 | `kata-as-coco-runtime.env.shims_ppc64le` | List of shims to deploy for ppc64le (if set, overrides `shims`) | `""` |
 | `kata-as-coco-runtime.env.defaultShim` | Default shim if `kata` is specified in pod annotations | `""` |
 | `kata-as-coco-runtime.env.defaultShim_x86_64` | The default shim to use if none specified for x86_64 (if set, overrides `defaultShim`) | `""` |
-| `kata-as-coco-runtime.env.defaultShim_aarch64` | The default shim to use if none specified for aarch64 (if set, overrides `defaultShim`) | `""` |
 | `kata-as-coco-runtime.env.defaultShim_s390x` | The default shim to use if none specified for s390x (if set, overrides `defaultShim`) | `""` |
 | `kata-as-coco-runtime.env.defaultShim_ppc64le` | The default shim to use if none specified for ppc64le (if set, overrides `defaultShim`) | `""` |
 | `kata-as-coco-runtime.env.createRuntimeClasses` | Create RuntimeClass resources | `true` |
@@ -244,7 +225,6 @@ The chart supports installing a custom containerd binary from a tarball before d
 || `customContainerd.enabled` | Enable custom containerd installation | `false` |
 || `customContainerd.tarballUrl` | URL to containerd tarball (single-arch clusters) | `""` |
 || `customContainerd.tarballUrls.amd64` | URL for amd64/x86_64 tarball (multi-arch clusters) | `""` |
-|| `customContainerd.tarballUrls.arm64` | URL for arm64/aarch64 tarball (multi-arch clusters) | `""` |
 || `customContainerd.tarballUrls.s390x` | URL for s390x tarball (multi-arch clusters) | `""` |
 || `customContainerd.tarballUrls.ppc64le` | URL for ppc64le tarball (multi-arch clusters) | `""` |
 || `customContainerd.installPath` | Installation path on host | `/usr/local` |
@@ -271,11 +251,11 @@ helm install coco oci://ghcr.io/confidential-containers/charts/confidential-cont
 
 **Example (Multi-Architecture/Heterogeneous Cluster):**
 ```bash
-# Install with custom containerd for mixed x86_64 and aarch64 cluster
+# Install with custom containerd for mixed x86_64 and s390x cluster
 helm install coco oci://ghcr.io/confidential-containers/charts/confidential-containers \
   --set customContainerd.enabled=true \
   --set customContainerd.tarballUrls.amd64=https://example.com/containerd-1.7.0-linux-amd64.tar.gz \
-  --set customContainerd.tarballUrls.arm64=https://example.com/containerd-1.7.0-linux-arm64.tar.gz \
+  --set customContainerd.tarballUrls.s390x=https://example.com/containerd-1.7.0-linux-s390x.tar.gz \
   --namespace coco-system
 
 # Or using a custom values file
@@ -284,7 +264,6 @@ customContainerd:
   enabled: true
   tarballUrls:
     amd64: https://example.com/containerd-1.7.0-linux-amd64.tar.gz
-    arm64: https://example.com/containerd-1.7.0-linux-arm64.tar.gz
     s390x: https://example.com/containerd-1.7.0-linux-s390x.tar.gz
 EOF
 
@@ -310,14 +289,12 @@ helm install coco oci://ghcr.io/confidential-containers/charts/confidential-cont
 The Helm chart supports multiple architectures with appropriate TEE technology shims for each platform:
 - **x86_64**: AMD SEV-SNP, Intel TDX, NVIDIA GPU variants
 - **s390x**: IBM Secure Execution
-- **aarch64**: Development runtime
 
 ### Architecture-Specific Values Files
 
 Architecture-specific kata runtime configurations are organized in the `values/` directory:
 - **x86_64** - Default configuration in `values.yaml` (Intel/AMD platforms)
 - `values/kata-s390x.yaml` - For IBM Z mainframes
-- `values/kata-aarch64.yaml` - For ARM64 platforms
 - `values/kata-remote.yaml` - For peer-pods
 
 Each file contains:
