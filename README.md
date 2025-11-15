@@ -89,8 +89,6 @@ For complete installation instructions, customization options, and troubleshooti
 
 - **AMD SEV-SNP** (Secure Encrypted Virtualization - Secure Nested Paging)
 - **Intel TDX** (Trust Domain Extensions)
-- **NVIDIA GPU with SEV-SNP** (GPU workloads with AMD SEV-SNP)
-- **NVIDIA GPU with TDX** (GPU workloads with Intel TDX)
 - **Development runtime** (qemu-coco-dev for testing)
 
 ### s390x (IBM Z)
@@ -127,15 +125,16 @@ The available RuntimeClasses depend on the architecture:
 #### x86_64
 
 - `kata-qemu-coco-dev` - Development/testing runtime
+- `kata-qemu-coco-dev-runtime-rs` - Development/testing runtime (Rust-based)
 - `kata-qemu-snp` - AMD SEV-SNP
 - `kata-qemu-tdx` - Intel TDX
-- `kata-qemu-nvidia-gpu-snp` - NVIDIA GPU with AMD SEV-SNP
-- `kata-qemu-nvidia-gpu-tdx` - NVIDIA GPU with Intel TDX
 
 #### s390x
 
 - `kata-qemu-coco-dev` - Development/testing runtime
+- `kata-qemu-coco-dev-runtime-rs` - Development/testing runtime (Rust-based)
 - `kata-qemu-se` - IBM Secure Execution
+- `kata-qemu-se-runtime-rs` - IBM Secure Execution (Rust-based)
 
 #### peer-pods
 
@@ -160,33 +159,41 @@ kubectl get runtimeclass
 
 The chart provides architecture-specific kata runtime configuration files:
 
-- **values.yaml**: x86_64 defaults (SNP, TDX, and NVIDIA GPU shims)
-- **values/kata-s390x.yaml**: IBM SE shim
+- **values.yaml**: x86_64 defaults (SNP, TDX, and development shims)
+- **values/kata-s390x.yaml**: IBM SE shim and development shims
 - **values/kata-remote.yaml**: Peer-pods
 
 ### Key Configuration Parameters
 
 Parameters that are commonly customized (use `--set` flags):
 
-| Parameter | Description | Default (from kata-deploy) |
-|-----------|-------------|---------------------------|
+| Parameter | Description | Default |
+|-----------|-------------|---------|
 | `kata-as-coco-runtime.imagePullPolicy` | Image pull policy | `Always` |
 | `kata-as-coco-runtime.imagePullSecrets` | Image pull secrets for private registry | `[]` |
 | `kata-as-coco-runtime.k8sDistribution` | Kubernetes distribution (k8s, k3s, rke2, k0s, microk8s) | `k8s` |
 | `kata-as-coco-runtime.nodeSelector` | Node selector for deployment | `{}` |
-| `kata-as-coco-runtime.env.debug` | Enable debug logging | `false` |
+| `kata-as-coco-runtime.debug` | Enable debug logging | `false` |
 
-Parameters set by architecture-specific kata runtime values files:
+### Structured Configuration (Kata Containers)
+
+The chart uses Kata Containers' structured configuration format for TEE shims. Parameters set by architecture-specific kata runtime values files:
 
 | Parameter | Description | Set by values/kata-*.yaml |
 |-----------|-------------|---------------------------|
-| `architecture` | Architecture label for NOTES | `x86_64`, `s390x`, or `remote` |
-| `kata-as-coco-runtime.env.shims` | Runtime shims to install | Architecture-specific list |
-| `kata-as-coco-runtime.env.defaultShim` | Default shim if `kata` is specified in pood annotations | Architecture-specific mappings |
-| `kata-as-coco-runtime.env.snapshotterHandlerMapping` | Snapshotter handler mapping | Architecture-specific mappings |
-| `kata-as-coco-runtime.env.pullTypeMapping` | Image pull type mapping | Architecture-specific mappings |
-| `kata-as-coco-runtime.env._experimentalSetupSnapshotter` | Deploys (nydus) and/or sets up (erofs, nydus) the snapshotter(s) specified as the value (supports multiple snapshotters, separated by commas; e.g., `nydus,erofs`) | `""` |
-| `kata-as-coco-runtime.env._experimentalForceGuestPull` | Enables `experimental_force_guest_pull` for the shim(s) specified as the value (supports multiple shims, separated by commas; e.g., `qemu-tdx,qemu-snp`) | `""` |
+| `architecture` | Architecture label for NOTES | `x86_64` or `s390x` |
+| `kata-as-coco-runtime.snapshotter.setup` | Array of snapshotters to set up (e.g., `["nydus"]`) | Architecture-specific |
+| `kata-as-coco-runtime.shims.<shim-name>.enabled` | Enable/disable specific shim (e.g., `qemu-snp`, `qemu-tdx`, `qemu-se`, `qemu-coco-dev`) | Architecture-specific |
+| `kata-as-coco-runtime.shims.<shim-name>.supportedArches` | List of architectures supported by the shim | Architecture-specific |
+| `kata-as-coco-runtime.shims.<shim-name>.containerd.snapshotter` | Snapshotter to use for containerd (e.g., `nydus`, `""` for none) | Architecture-specific |
+| `kata-as-coco-runtime.shims.<shim-name>.containerd.forceGuestPull` | Enable experimental force guest pull | `false` |
+| `kata-as-coco-runtime.shims.<shim-name>.crio.guestPull` | Enable guest pull for CRI-O | Architecture-specific |
+| `kata-as-coco-runtime.shims.<shim-name>.agent.httpsProxy` | HTTPS proxy for guest agent | `""` |
+| `kata-as-coco-runtime.shims.<shim-name>.agent.noProxy` | No proxy settings for guest agent | `""` |
+| `kata-as-coco-runtime.runtimeClasses.enabled` | Create RuntimeClass resources | `true` |
+| `kata-as-coco-runtime.runtimeClasses.createDefault` | Create default k8s RuntimeClass | `false` |
+| `kata-as-coco-runtime.runtimeClasses.defaultName` | Name for default RuntimeClass | `"kata"` |
+| `kata-as-coco-runtime.defaultShim.<arch>` | Default shim per architecture (e.g., `amd64: qemu-snp`) | Architecture-specific |
 
 ### Additional Parameters (kata-deploy options)
 
@@ -196,18 +203,8 @@ These inherit from kata-deploy defaults but can be overridden:
 |-----------|-------------|---------|
 | `kata-as-coco-runtime.image.reference` | Kata deploy image | `quay.io/kata-containers/kata-deploy` |
 | `kata-as-coco-runtime.image.tag` | Kata deploy image tag | Chart's appVersion |
-| `kata-as-coco-runtime.env.shims_x86_64` | List of shims to deploy for x86_64 (if set, overrides `shims`) | `""` |
-| `kata-as-coco-runtime.env.shims_s390x` | List of shims to deploy for s390x (if set, overrides `shims`) | `""` |
-| `kata-as-coco-runtime.env.defaultShim` | Default shim if `kata` is specified in pod annotations | `""` |
-| `kata-as-coco-runtime.env.defaultShim_x86_64` | The default shim to use if none specified for x86_64 (if set, overrides `defaultShim`) | `""` |
-| `kata-as-coco-runtime.env.defaultShim_s390x` | The default shim to use if none specified for s390x (if set, overrides `defaultShim`) | `""` |
-| `kata-as-coco-runtime.env.createRuntimeClasses` | Create RuntimeClass resources | `true` |
-| `kata-as-coco-runtime.env.createDefaultRuntimeClass` | Create default k8s RuntimeClass | `false` |
 | `kata-as-coco-runtime.env.installationPrefix` | Installation path prefix | `""` (uses kata-deploy defaults) |
 | `kata-as-coco-runtime.env.multiInstallSuffix` | Suffix for multiple installations | `""` |
-| `kata-as-coco-runtime.env.allowedHypervisorAnnotations` | Allowed hypervisor annotations | `""` |
-| `kata-as-coco-runtime.env.agentHttpsProxy` | HTTPS proxy for guest agent | `""` |
-| `kata-as-coco-runtime.env.agentNoProxy` | No proxy settings for guest agent | `""` |
 
 **See [QUICKSTART.md](QUICKSTART.md) for complete customization examples and usage.**
 
@@ -284,8 +281,8 @@ helm install coco oci://ghcr.io/confidential-containers/charts/confidential-cont
 ### Overview
 
 The Helm chart supports multiple architectures with appropriate TEE technology shims for each platform:
-- **x86_64**: AMD SEV-SNP, Intel TDX, NVIDIA GPU variants
-- **s390x**: IBM Secure Execution
+- **x86_64**: AMD SEV-SNP, Intel TDX, development runtime
+- **s390x**: IBM Secure Execution, development runtime
 
 ### Architecture-Specific Values Files
 
@@ -374,7 +371,6 @@ See the [Confidential Containers contributing guide](https://github.com/confiden
 | **Deployment Types** | ✅ | Standard (CoCo releases), CI (Kata Containers latest) |
 | **Image Pull Modes** | ✅ | nydus-snapshotter, experimental-force-guest-pull |
 | **Special Tests** | ✅ | Custom containerd |
-| **Peer-pods** | ❌ | Not yet supported |
 
 ### Roadmap to 0.18.0
 
