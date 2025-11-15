@@ -50,7 +50,6 @@ spec:
           case "${NODE_ARCH}" in
             x86_64) ARCH="amd64" ;;
             s390x) ARCH="s390x" ;;
-            ppc64le) ARCH="ppc64le" ;;
             *)
               echo "❌ Unsupported architecture: ${NODE_ARCH}"
               exit 1
@@ -93,9 +92,6 @@ spec:
           {{- end }}
           {{- if .Values.customContainerd.tarballUrls.s390x }}
           [ "${ARCH}" = "s390x" ] && TARBALL_URL="{{ .Values.customContainerd.tarballUrls.s390x }}"
-          {{- end }}
-          {{- if .Values.customContainerd.tarballUrls.ppc64le }}
-          [ "${ARCH}" = "ppc64le" ] && TARBALL_URL="{{ .Values.customContainerd.tarballUrls.ppc64le }}"
           {{- end }}
           {{- end }}
           

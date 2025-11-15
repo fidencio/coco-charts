@@ -27,7 +27,7 @@ customContainerd:
   # The tarball should extract to bin/containerd, bin/containerd-shim-runc-v2, etc.
   tarballUrl: ""
   # Multi-arch tarball URLs (takes precedence over tarballUrl if specified)
-  # Supported architectures: amd64, s390x, ppc64le
+  # Supported architectures: amd64, s390x
   tarballUrls:
     amd64: ""
     s390x: ""
