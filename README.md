@@ -198,11 +198,9 @@ These inherit from kata-deploy defaults but can be overridden:
 | `kata-as-coco-runtime.image.tag` | Kata deploy image tag | Chart's appVersion |
 | `kata-as-coco-runtime.env.shims_x86_64` | List of shims to deploy for x86_64 (if set, overrides `shims`) | `""` |
 | `kata-as-coco-runtime.env.shims_s390x` | List of shims to deploy for s390x (if set, overrides `shims`) | `""` |
-| `kata-as-coco-runtime.env.shims_ppc64le` | List of shims to deploy for ppc64le (if set, overrides `shims`) | `""` |
 | `kata-as-coco-runtime.env.defaultShim` | Default shim if `kata` is specified in pod annotations | `""` |
 | `kata-as-coco-runtime.env.defaultShim_x86_64` | The default shim to use if none specified for x86_64 (if set, overrides `defaultShim`) | `""` |
 | `kata-as-coco-runtime.env.defaultShim_s390x` | The default shim to use if none specified for s390x (if set, overrides `defaultShim`) | `""` |
-| `kata-as-coco-runtime.env.defaultShim_ppc64le` | The default shim to use if none specified for ppc64le (if set, overrides `defaultShim`) | `""` |
 | `kata-as-coco-runtime.env.createRuntimeClasses` | Create RuntimeClass resources | `true` |
 | `kata-as-coco-runtime.env.createDefaultRuntimeClass` | Create default k8s RuntimeClass | `false` |
 | `kata-as-coco-runtime.env.installationPrefix` | Installation path prefix | `""` (uses kata-deploy defaults) |
@@ -226,7 +224,6 @@ The chart supports installing a custom containerd binary from a tarball before d
 || `customContainerd.tarballUrl` | URL to containerd tarball (single-arch clusters) | `""` |
 || `customContainerd.tarballUrls.amd64` | URL for amd64/x86_64 tarball (multi-arch clusters) | `""` |
 || `customContainerd.tarballUrls.s390x` | URL for s390x tarball (multi-arch clusters) | `""` |
-|| `customContainerd.tarballUrls.ppc64le` | URL for ppc64le tarball (multi-arch clusters) | `""` |
 || `customContainerd.installPath` | Installation path on host | `/usr/local` |
 || `customContainerd.image.repository` | Installer image (needs wget, tar, sh) | `docker.io/library/alpine` |
 || `customContainerd.image.tag` | Installer image tag | `3.22` |
