@@ -294,10 +294,26 @@ jobs:
         with:
           version: '3.13.1'
 
+      - name: Install yq (for CI tests)
+        if: steps.should-run.outputs.should-run == 'true' && matrix.deployment-type == 'ci'
+        run: |
+          echo "📦 Installing yq for chart version override..."
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
+
       - name: Update Helm dependencies
         if: steps.should-run.outputs.should-run == 'true'
         run: |
           echo "📦 Updating Helm chart dependencies..."
+          if [ "${{ matrix.deployment-type }}" = "ci" ]; then
+            echo "🔧 CI test detected - using dev chart version from main (0.0.0-dev)..."
+            # For CI tests, use the dev chart version published from main
+            yq eval -i '.dependencies[0].version = "0.0.0-dev"' Chart.yaml
+            echo "✅ Updated Chart.yaml to use dev version 0.0.0-dev"
+          else
+            echo "📌 Standard test - using released version from Chart.yaml"
+          fi
           helm dependency update
           echo "✅ Dependencies updated"
 
