@@ -10,12 +10,80 @@ architecture: s390x
 kata-as-coco-runtime:
   imagePullPolicy: Always
   k8sDistribution: k8s
+  debug: false
 
-  env:
-    debug: "false"
-    defaultShim: ""
-    shims: "qemu-coco-dev qemu-se"
-    snapshotterHandlerMapping: "qemu-coco-dev:nydus,qemu-se:nydus"
-    pullTypeMapping: "qemu-coco-dev:guest-pull,qemu-se:guest-pull"
-    _experimentalSetupSnapshotter: "nydus"
-    _experimentalForceGuestPull: ""
+  # Snapshotter configuration
+  snapshotter:
+    setup: ["nydus"]
+
+  # TEE (Trusted Execution Environment) shims configuration
+  # Only enable the shims we want to expose, explicitly disable all others
+  shims:
+    # Enabled shims - TEE shims we want to expose
+    qemu-se:
+      enabled: true
+      supportedArches:
+        - s390x
+      allowedHypervisorAnnotations: []
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
+      agent:
+        httpsProxy: ""
+        noProxy: ""
+
+    qemu-se-runtime-rs:
+      enabled: true
+      supportedArches:
+        - s390x
+      allowedHypervisorAnnotations: []
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
+      agent:
+        httpsProxy: ""
+        noProxy: ""
+
+    qemu-coco-dev:
+      enabled: true
+      supportedArches:
+        - amd64
+        - s390x
+      allowedHypervisorAnnotations: []
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
+      agent:
+        httpsProxy: ""
+        noProxy: ""
+
+    qemu-coco-dev-runtime-rs:
+      enabled: true
+      supportedArches:
+        - amd64
+        - s390x
+      allowedHypervisorAnnotations: []
+      containerd:
+        snapshotter: nydus
+        forceGuestPull: false
+      crio:
+        guestPull: true
+      agent:
+        httpsProxy: ""
+        noProxy: ""
+
+  # RuntimeClasses configuration
+  runtimeClasses:
+    enabled: true
+    createDefault: false
+    defaultName: "kata"
+
+  # Default shim per architecture
+  defaultShim:
+    s390x: qemu-se

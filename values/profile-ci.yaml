@@ -16,9 +16,14 @@ kata-as-coco-runtime:
     reference: "quay.io/kata-containers/kata-deploy-ci"
     # Latest tag from CI builds
     tag: "kata-containers-latest"
-  env:
-    # Enable debug logging for CI testing
-    debug: "true"
-    # Experimental features
-    _experimentalSetupSnapshotter: "nydus"
-    _experimentalForceGuestPull: ""
+  # Enable debug logging for CI testing
+  debug: true
+  # Snapshotter configuration (using new structured format)
+  # This will be merged with the snapshotter config from base values files
+  snapshotter:
+    setup: ["nydus"]
+
+  # Default shim per architecture
+  defaultShim:
+    amd64: qemu-coco-dev
+    s390x: qemu-coco-dev
