@@ -100,123 +100,43 @@ jobs:
           fi
 
   e2e-tests:
-    name: E2E (${{ matrix.deployment-type }} / ${{ matrix.k8s-distro }}${{ matrix.image-pull-mode && format(' / {0}', matrix.image-pull-mode) || '' }}${{ matrix.test-containerd-upgrade && ' / containerd-upgrade' || '' }})
+    name: E2E (${{ matrix.environment.deployment-type }} / ${{ matrix.environment.k8s-distro }}${{ matrix.environment.image-pull-mode && format(' / {0}', matrix.environment.image-pull-mode) || '' }}${{ matrix.environment.test-containerd-upgrade && ' / containerd-upgrade' || '' }})
     runs-on: ubuntu-24.04
     needs: check-changes
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # CI Variant - K3s with both pull modes
-          - deployment-type: ci
-            k8s-distro: k3s
-            image-pull-mode: nydus
-          - deployment-type: ci
-            k8s-distro: k3s
-            image-pull-mode: experimental-force-guest-pull
-          # CI Variant - K0s with both pull modes
-          - deployment-type: ci
-            k8s-distro: k0s
-            image-pull-mode: nydus
-          - deployment-type: ci
-            k8s-distro: k0s
-            image-pull-mode: experimental-force-guest-pull
-          # CI Variant - RKE2 with both pull modes
-          - deployment-type: ci
-            k8s-distro: rke2
-            image-pull-mode: nydus
-          - deployment-type: ci
-            k8s-distro: rke2
-            image-pull-mode: experimental-force-guest-pull
-          # CI Variant - MicroK8s with both pull modes
-          - deployment-type: ci
-            k8s-distro: microk8s
-            image-pull-mode: nydus
-          - deployment-type: ci
-            k8s-distro: microk8s
-            image-pull-mode: experimental-force-guest-pull
-          # CI Variant - Kubeadm with containerd latest - both pull modes
-          - deployment-type: ci
-            k8s-distro: kubeadm-containerd-latest
-            image-pull-mode: nydus
-          - deployment-type: ci
-            k8s-distro: kubeadm-containerd-latest
-            image-pull-mode: experimental-force-guest-pull
-          # CI Variant - Kubeadm with containerd 1.7 - both pull modes
-          - deployment-type: ci
-            k8s-distro: kubeadm-containerd-1.7
-            image-pull-mode: nydus
-          - deployment-type: ci
-            k8s-distro: kubeadm-containerd-1.7
-            image-pull-mode: experimental-force-guest-pull
-          # Containerd Upgrade Test - CI Variant - Kubeadm with containerd 1.7 upgraded to 2.0
-          - deployment-type: ci
-            k8s-distro: kubeadm-containerd-1.7
-            image-pull-mode: nydus
-            test-containerd-upgrade: true
-          - deployment-type: ci
-            k8s-distro: kubeadm-containerd-1.7
-            image-pull-mode: experimental-force-guest-pull
-            test-containerd-upgrade: true
-          ## CI Variant - Kubeadm with CRI-O
-          #- deployment-type: ci
-          #  k8s-distro: kubeadm-crio
-          
-          # Standard Deployment - K3s with both pull modes
-          - deployment-type: standard
-            k8s-distro: k3s
-            image-pull-mode: nydus
-          - deployment-type: standard
-            k8s-distro: k3s
-            image-pull-mode: experimental-force-guest-pull
-          # Standard Deployment - K0s with both pull modes
-          - deployment-type: standard
-            k8s-distro: k0s
-            image-pull-mode: nydus
-          - deployment-type: standard
-            k8s-distro: k0s
-            image-pull-mode: experimental-force-guest-pull
-          # Standard Deployment - RKE2 with both pull modes
-          - deployment-type: standard
-            k8s-distro: rke2
-            image-pull-mode: nydus
-          - deployment-type: standard
-            k8s-distro: rke2
-            image-pull-mode: experimental-force-guest-pull
-          # Standard Deployment - MicroK8s with both pull modes
-          - deployment-type: standard
-            k8s-distro: microk8s
-            image-pull-mode: nydus
-          - deployment-type: standard
-            k8s-distro: microk8s
-            image-pull-mode: experimental-force-guest-pull
-          # Standard Deployment - Kubeadm with containerd latest - both pull modes
-          - deployment-type: standard
-            k8s-distro: kubeadm-containerd-latest
-            image-pull-mode: nydus
-          - deployment-type: standard
-            k8s-distro: kubeadm-containerd-latest
-            image-pull-mode: experimental-force-guest-pull
-          # Standard Deployment - Kubeadm with containerd 1.7 - both pull modes
-          - deployment-type: standard
-            k8s-distro: kubeadm-containerd-1.7
-            image-pull-mode: nydus
-          - deployment-type: standard
-            k8s-distro: kubeadm-containerd-1.7
-            image-pull-mode: experimental-force-guest-pull
-          # Containerd Upgrade Test - Standard Deployment - Kubeadm with containerd 1.7 upgraded to 2.0
-          - deployment-type: standard
-            k8s-distro: kubeadm-containerd-1.7
-            image-pull-mode: nydus
-            test-containerd-upgrade: true
-          - deployment-type: standard
-            k8s-distro: kubeadm-containerd-1.7
-            image-pull-mode: experimental-force-guest-pull
-            test-containerd-upgrade: true
-          ## Standard Deployment - Kubeadm with CRI-O
-          #- deployment-type: standard
-          #  k8s-distro: kubeadm-crio
+        environment: [
+          { deployment-type: ci,       k8s-distro: k3s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false },
+          { deployment-type: ci,       k8s-distro: k3s,                       image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
+          { deployment-type: ci,       k8s-distro: k0s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false },
+          { deployment-type: ci,       k8s-distro: k0s,                       image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
+          { deployment-type: ci,       k8s-distro: rke2,                      image-pull-mode: nydus,                         test-containerd-upgrade: false },
+          { deployment-type: ci,       k8s-distro: rke2,                      image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
+          { deployment-type: ci,       k8s-distro: microk8s,                  image-pull-mode: nydus,                         test-containerd-upgrade: false },
+          { deployment-type: ci,       k8s-distro: microk8s,                  image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-latest, image-pull-mode: nydus,                         test-containerd-upgrade: false },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-latest, image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: false },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: true  },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: true  },
+          { deployment-type: standard, k8s-distro: k3s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false },
+          { deployment-type: standard, k8s-distro: k3s,                       image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
+          { deployment-type: standard, k8s-distro: k0s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false },
+          { deployment-type: standard, k8s-distro: k0s,                       image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
+          { deployment-type: standard, k8s-distro: rke2,                      image-pull-mode: nydus,                         test-containerd-upgrade: false },
+          { deployment-type: standard, k8s-distro: rke2,                      image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
+          { deployment-type: standard, k8s-distro: microk8s,                  image-pull-mode: nydus,                         test-containerd-upgrade: false },
+          { deployment-type: standard, k8s-distro: microk8s,                  image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-latest, image-pull-mode: nydus,                         test-containerd-upgrade: false },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-latest, image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: false },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: true  },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: true  },
+        ]
     
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -227,10 +147,10 @@ jobs:
         run: |
           # CI tests should ALWAYS run
           # Standard tests run only when kata-deploy version changed
-          if [ "${{ matrix.deployment-type }}" = "ci" ]; then
+          if [ "${{ matrix.environment.deployment-type }}" = "ci" ]; then
             echo "should-run=true" >> $GITHUB_OUTPUT
             echo "✅ CI test will run"
-          elif [ "${{ matrix.deployment-type }}" = "standard" ] && [ "${{ needs.check-changes.outputs.kata-deploy-version-changed }}" = "true" ]; then
+          elif [ "${{ matrix.environment.deployment-type }}" = "standard" ] && [ "${{ needs.check-changes.outputs.kata-deploy-version-changed }}" = "true" ]; then
             echo "should-run=true" >> $GITHUB_OUTPUT
             echo "✅ Standard test will run (kata-deploy version changed)"
           else
@@ -243,31 +163,31 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Kubernetes cluster (k3s)
-        if: steps.should-run.outputs.should-run == 'true' && matrix.k8s-distro == 'k3s'
+        if: steps.should-run.outputs.should-run == 'true' && matrix.environment.k8s-distro == 'k3s'
         uses: ./.github/actions/setup-k8s
         with:
           distribution: k3s
       
       - name: Setup Kubernetes cluster (k0s)
-        if: steps.should-run.outputs.should-run == 'true' && matrix.k8s-distro == 'k0s'
+        if: steps.should-run.outputs.should-run == 'true' && matrix.environment.k8s-distro == 'k0s'
         uses: ./.github/actions/setup-k8s
         with:
           distribution: k0s
       
       - name: Setup Kubernetes cluster (rke2)
-        if: steps.should-run.outputs.should-run == 'true' && matrix.k8s-distro == 'rke2'
+        if: steps.should-run.outputs.should-run == 'true' && matrix.environment.k8s-distro == 'rke2'
         uses: ./.github/actions/setup-k8s
         with:
           distribution: rke2
       
       - name: Setup Kubernetes cluster (microk8s)
-        if: steps.should-run.outputs.should-run == 'true' && matrix.k8s-distro == 'microk8s'
+        if: steps.should-run.outputs.should-run == 'true' && matrix.environment.k8s-distro == 'microk8s'
         uses: ./.github/actions/setup-k8s
         with:
           distribution: microk8s
       
       - name: Setup Kubernetes cluster (kubeadm with containerd latest)
-        if: steps.should-run.outputs.should-run == 'true' && matrix.k8s-distro == 'kubeadm-containerd-latest'
+        if: steps.should-run.outputs.should-run == 'true' && matrix.environment.k8s-distro == 'kubeadm-containerd-latest'
         uses: ./.github/actions/setup-k8s
         with:
           distribution: kubeadm
@@ -275,7 +195,7 @@ jobs:
           runtime-version: latest
       
       - name: Setup Kubernetes cluster (kubeadm with containerd 1.7)
-        if: steps.should-run.outputs.should-run == 'true' && matrix.k8s-distro == 'kubeadm-containerd-1.7'
+        if: steps.should-run.outputs.should-run == 'true' && matrix.environment.k8s-distro == 'kubeadm-containerd-1.7'
         uses: ./.github/actions/setup-k8s
         with:
           distribution: kubeadm
@@ -283,7 +203,7 @@ jobs:
           runtime-version: "1.7"
       
       - name: Setup Kubernetes cluster (kubeadm with CRI-O)
-        if: steps.should-run.outputs.should-run == 'true' && matrix.k8s-distro == 'kubeadm-crio'
+        if: steps.should-run.outputs.should-run == 'true' && matrix.environment.k8s-distro == 'kubeadm-crio'
         uses: ./.github/actions/setup-k8s
         with:
           distribution: kubeadm
@@ -293,7 +213,7 @@ jobs:
         if: steps.should-run.outputs.should-run == 'true'
         id: k8s-distro-name
         run: |
-          case "${{ matrix.k8s-distro }}" in
+          case "${{ matrix.environment.k8s-distro }}" in
             k3s) echo "name=k3s" >> $GITHUB_OUTPUT ;;
             k0s) echo "name=k0s" >> $GITHUB_OUTPUT ;;
             rke2) echo "name=rke2" >> $GITHUB_OUTPUT ;;
@@ -311,7 +231,7 @@ jobs:
           version: '3.13.1'
 
       - name: Install yq (for CI tests)
-        if: steps.should-run.outputs.should-run == 'true' && matrix.deployment-type == 'ci'
+        if: steps.should-run.outputs.should-run == 'true' && matrix.environment.deployment-type == 'ci'
         run: |
           echo "📦 Installing yq for chart version override..."
           sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
@@ -322,7 +242,7 @@ jobs:
         if: steps.should-run.outputs.should-run == 'true'
         run: |
           echo "📦 Updating Helm chart dependencies..."
-          if [ "${{ matrix.deployment-type }}" = "ci" ]; then
+          if [ "${{ matrix.environment.deployment-type }}" = "ci" ]; then
             echo "🔧 CI test detected - using dev chart version from main (0.0.0-dev)..."
             # For CI tests, use the dev chart version published from main
             yq eval -i '.dependencies[0].version = "0.0.0-dev"' Chart.yaml
@@ -334,7 +254,7 @@ jobs:
           echo "✅ Dependencies updated"
 
       - name: Get original containerd version
-        if: steps.should-run.outputs.should-run == 'true' && matrix.test-containerd-upgrade
+        if: steps.should-run.outputs.should-run == 'true' && matrix.environment.test-containerd-upgrade
         id: original-containerd-version
         run: |
           echo "🔍 Checking original containerd version..."
@@ -348,20 +268,20 @@ jobs:
         run: |
           # Use CI profile for CI deployment type
           ARGS=""
-          if [ "${{ matrix.deployment-type }}" = "ci" ]; then
+          if [ "${{ matrix.environment.deployment-type }}" = "ci" ]; then
             ARGS="-f values/profile-ci.yaml"
           fi
 
           # Add k8s distribution
           ARGS="${ARGS} --set kata-as-coco-runtime.k8sDistribution=${{ steps.k8s-distro-name.outputs.name }}"
 
-          if [ "${{ matrix.image-pull-mode }}" = "experimental-force-guest-pull" ]; then
+          if [ "${{ matrix.environment.image-pull-mode }}" = "experimental-force-guest-pull" ]; then
             # Disable snapshotter setup (set to null) and configure qemu-coco-dev for guest pull
             ARGS="${ARGS} --set kata-as-coco-runtime.snapshotter.setup=null --set kata-as-coco-runtime.shims.qemu-coco-dev.containerd.snapshotter='' --set kata-as-coco-runtime.shims.qemu-coco-dev.containerd.forceGuestPull=true"
           fi
           
           # Add containerd upgrade flags (only for containerd upgrade test)
-          if [ "${{ matrix.test-containerd-upgrade }}" == "true" ]; then
+          if [ "${{ matrix.environment.test-containerd-upgrade }}" == "true" ]; then
             ARGS="${ARGS} --set customContainerd.enabled=true --set customContainerd.tarballUrl=https://github.com/containerd/containerd/releases/download/v2.0.0/containerd-2.0.0-linux-amd64.tar.gz"
           fi
           
@@ -371,7 +291,7 @@ jobs:
         if: steps.should-run.outputs.should-run == 'true'
         id: deployment-params
         run: |
-          if [ "${{ matrix.deployment-type }}" = "ci" ]; then
+          if [ "${{ matrix.environment.deployment-type }}" = "ci" ]; then
             echo "release-name=coco-ci" >> $GITHUB_OUTPUT
           else
             echo "release-name=coco" >> $GITHUB_OUTPUT
@@ -474,7 +394,7 @@ jobs:
           daemonset-label: ${{ steps.deployment-params.outputs.daemonset-label }}
 
       - name: Get new containerd version
-        if: steps.should-run.outputs.should-run == 'true' && matrix.test-containerd-upgrade
+        if: steps.should-run.outputs.should-run == 'true' && matrix.environment.test-containerd-upgrade
         id: new-containerd-version
         run: |
           echo "🔍 Checking new containerd version..."
@@ -502,7 +422,7 @@ jobs:
           echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Compare containerd versions
-        if: steps.should-run.outputs.should-run == 'true' && matrix.test-containerd-upgrade
+        if: steps.should-run.outputs.should-run == 'true' && matrix.environment.test-containerd-upgrade
         run: |
           echo "📊 Comparing containerd versions..."
           echo ""
@@ -623,7 +543,7 @@ jobs:
           echo "=== kata-deploy logs ==="
           kubectl logs -n coco-system -l ${{ steps.deployment-params.outputs.daemonset-label }} --tail=200 --prefix=true || echo "No logs available"
           
-          if [ "${{ matrix.test-containerd-upgrade }}" == "true" ]; then
+          if [ "${{ matrix.environment.test-containerd-upgrade }}" == "true" ]; then
             echo ""
             echo "=== containerd-installer logs ==="
             kubectl logs -n coco-system -l app.kubernetes.io/component=containerd-installer --tail=200 --prefix=true || echo "No logs available"
@@ -648,7 +568,7 @@ jobs:
           helm uninstall ${RELEASE_NAME} -n coco-system --wait --timeout 5m || true
           
           # For containerd upgrade tests, verify rollback
-          if [ "${{ matrix.test-containerd-upgrade }}" == "true" ]; then
+          if [ "${{ matrix.environment.test-containerd-upgrade }}" == "true" ]; then
             echo ""
             echo "⏳ Waiting for post-delete cleanup job..."
             
@@ -737,7 +657,7 @@ jobs:
           echo "Remaining RuntimeClasses:"
           kubectl get runtimeclass || echo "No RuntimeClasses found"
           
-          if [ "${{ matrix.test-containerd-upgrade }}" == "true" ]; then
+          if [ "${{ matrix.environment.test-containerd-upgrade }}" == "true" ]; then
             echo ""
             echo "Remaining cleanup jobs:"
             kubectl get jobs -n coco-system -l app.kubernetes.io/component=containerd-cleanup || echo "No cleanup jobs found"
