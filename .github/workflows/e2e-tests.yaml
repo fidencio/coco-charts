@@ -100,7 +100,7 @@ jobs:
           fi
 
   e2e-tests:
-    name: E2E (${{ matrix.environment.deployment-type }} / ${{ matrix.environment.k8s-distro }}${{ matrix.environment.image-pull-mode && format(' / {0}', matrix.environment.image-pull-mode) || '' }}${{ matrix.environment.test-containerd-upgrade && ' / containerd-upgrade' || '' }})
+    name: E2E (${{ matrix.environment.deployment-type }} / ${{ matrix.environment.k8s-distro }}${{ matrix.environment.image-pull-mode && format(' / {0}', matrix.environment.image-pull-mode) || '' }}${{ matrix.environment.test-containerd-upgrade && ' / containerd-upgrade' || '' }} / ${{ matrix.environment.shim }})
     runs-on: ubuntu-24.04
     needs: check-changes
     timeout-minutes: 45
@@ -108,34 +108,48 @@ jobs:
       fail-fast: false
       matrix:
         environment: [
-          { deployment-type: ci,       k8s-distro: k3s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false },
-          { deployment-type: ci,       k8s-distro: k3s,                       image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
-          { deployment-type: ci,       k8s-distro: k0s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false },
-          { deployment-type: ci,       k8s-distro: k0s,                       image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
-          { deployment-type: ci,       k8s-distro: rke2,                      image-pull-mode: nydus,                         test-containerd-upgrade: false },
-          { deployment-type: ci,       k8s-distro: rke2,                      image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
-          { deployment-type: ci,       k8s-distro: microk8s,                  image-pull-mode: nydus,                         test-containerd-upgrade: false },
-          { deployment-type: ci,       k8s-distro: microk8s,                  image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
-          { deployment-type: ci,       k8s-distro: kubeadm-containerd-latest, image-pull-mode: nydus,                         test-containerd-upgrade: false },
-          { deployment-type: ci,       k8s-distro: kubeadm-containerd-latest, image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
-          { deployment-type: ci,       k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: false },
-          { deployment-type: ci,       k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
-          { deployment-type: ci,       k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: true  },
-          { deployment-type: ci,       k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: true  },
-          { deployment-type: standard, k8s-distro: k3s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false },
-          { deployment-type: standard, k8s-distro: k3s,                       image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
-          { deployment-type: standard, k8s-distro: k0s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false },
-          { deployment-type: standard, k8s-distro: k0s,                       image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
-          { deployment-type: standard, k8s-distro: rke2,                      image-pull-mode: nydus,                         test-containerd-upgrade: false },
-          { deployment-type: standard, k8s-distro: rke2,                      image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
-          { deployment-type: standard, k8s-distro: microk8s,                  image-pull-mode: nydus,                         test-containerd-upgrade: false },
-          { deployment-type: standard, k8s-distro: microk8s,                  image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
-          { deployment-type: standard, k8s-distro: kubeadm-containerd-latest, image-pull-mode: nydus,                         test-containerd-upgrade: false },
-          { deployment-type: standard, k8s-distro: kubeadm-containerd-latest, image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
-          { deployment-type: standard, k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: false },
-          { deployment-type: standard, k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false },
-          { deployment-type: standard, k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: true  },
-          { deployment-type: standard, k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: true  },
+          { deployment-type: ci,       k8s-distro: k3s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: ci,       k8s-distro: k3s,                       image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: ci,       k8s-distro: k0s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: ci,       k8s-distro: k0s,                       image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: ci,       k8s-distro: rke2,                      image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: ci,       k8s-distro: rke2,                      image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: ci,       k8s-distro: microk8s,                  image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: ci,       k8s-distro: microk8s,                  image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-latest, image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-latest, image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: true,  shim: qemu-coco-dev            },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: true,  shim: qemu-coco-dev            },
+          { deployment-type: standard, k8s-distro: k3s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: standard, k8s-distro: k3s,                       image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: standard, k8s-distro: k0s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: standard, k8s-distro: k0s,                       image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: standard, k8s-distro: rke2,                      image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: standard, k8s-distro: rke2,                      image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: standard, k8s-distro: microk8s,                  image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: standard, k8s-distro: microk8s,                  image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-latest, image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-latest, image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: false, shim: qemu-coco-dev            },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: true,  shim: qemu-coco-dev            },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: experimental-force-guest-pull, test-containerd-upgrade: true,  shim: qemu-coco-dev            },
+          { deployment-type: ci,       k8s-distro: k3s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev-runtime-rs },
+          { deployment-type: ci,       k8s-distro: k0s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev-runtime-rs },
+          { deployment-type: ci,       k8s-distro: rke2,                      image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev-runtime-rs },
+          { deployment-type: ci,       k8s-distro: microk8s,                  image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev-runtime-rs },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-latest, image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev-runtime-rs },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev-runtime-rs },
+          { deployment-type: ci,       k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: true,  shim: qemu-coco-dev-runtime-rs },
+          { deployment-type: standard, k8s-distro: k3s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev-runtime-rs },
+          { deployment-type: standard, k8s-distro: k0s,                       image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev-runtime-rs },
+          { deployment-type: standard, k8s-distro: rke2,                      image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev-runtime-rs },
+          { deployment-type: standard, k8s-distro: microk8s,                  image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev-runtime-rs },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-latest, image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev-runtime-rs },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: false, shim: qemu-coco-dev-runtime-rs },
+          { deployment-type: standard, k8s-distro: kubeadm-containerd-1.7,    image-pull-mode: nydus,                         test-containerd-upgrade: true,  shim: qemu-coco-dev-runtime-rs },
         ]
     
     env:
@@ -275,9 +289,13 @@ jobs:
           # Add k8s distribution
           ARGS="${ARGS} --set kata-as-coco-runtime.k8sDistribution=${{ steps.k8s-distro-name.outputs.name }}"
 
+          # Set default shim based on matrix
+          ARGS="${ARGS} --set kata-as-coco-runtime.env.defaultShim=${{ matrix.environment.shim }}"
+
           if [ "${{ matrix.environment.image-pull-mode }}" = "experimental-force-guest-pull" ]; then
-            # Disable snapshotter setup (set to null) and configure qemu-coco-dev for guest pull
-            ARGS="${ARGS} --set kata-as-coco-runtime.snapshotter.setup=null --set kata-as-coco-runtime.shims.qemu-coco-dev.containerd.snapshotter='' --set kata-as-coco-runtime.shims.qemu-coco-dev.containerd.forceGuestPull=true"
+            # Disable snapshotter setup (set to null) and configure shim for guest pull
+            SHIM="${{ matrix.environment.shim }}"
+            ARGS="${ARGS} --set kata-as-coco-runtime.snapshotter.setup=null --set kata-as-coco-runtime.shims.${SHIM}.containerd.snapshotter='' --set kata-as-coco-runtime.shims.${SHIM}.containerd.forceGuestPull=true"
           fi
           
           # Add containerd upgrade flags (only for containerd upgrade test)
@@ -304,17 +322,18 @@ jobs:
           case "$ARCH" in
             x86_64)
               VALUES_FILE="values.yaml"
-              RUNTIME_CLASS_SHIM="qemu-coco-dev"
               ;;
             s390x)
               VALUES_FILE="values/kata-s390x.yaml"
-              RUNTIME_CLASS_SHIM="qemu-coco-dev"  # s390x default
               ;;
             *)
               echo "❌ Unsupported architecture: $ARCH"
               exit 1
               ;;
           esac
+          
+          # Use shim from matrix
+          RUNTIME_CLASS_SHIM="${{ matrix.environment.shim }}"
           
           echo "ℹ️  Detected architecture: ${ARCH}"
           echo "ℹ️  Using values file: ${VALUES_FILE}"
@@ -479,6 +498,9 @@ jobs:
           INSTALL_PREFIX="/opt/kata"
           
           CONFIG_FILE="${INSTALL_PREFIX}/share/defaults/kata-containers/configuration-${CONFIG_NAME}.toml"
+          if [ "${CONFIG_NAME}" = *runtime-rs* ]; then
+            CONFIG_FILE="${INSTALL_PREFIX}/share/defaults/kata-containers/runtime-rs/configuration-${CONFIG_NAME}.toml"
+          fi
           
           echo "RuntimeClass: ${RUNTIME_CLASS}"
           echo "Configuration file: ${CONFIG_FILE}"
@@ -533,7 +555,11 @@ jobs:
             echo "❌ Failed to read configuration file"
             echo ""
             echo "Attempting to list available configurations:"
-            kubectl exec ${POD_NAME} -n default -- ls -la /host${INSTALL_PREFIX}/share/defaults/kata-containers/ 2>/dev/null || echo "Failed to list directory"
+            if [ "${CONFIG_NAME}" = *runtime-rs* ]; then
+              kubectl exec ${POD_NAME} -n default -- ls -la /host${INSTALL_PREFIX}/share/defaults/kata-containers/runtime-rs/ 2>/dev/null || echo "Failed to list directory"
+            else
+              kubectl exec ${POD_NAME} -n default -- ls -la /host${INSTALL_PREFIX}/share/defaults/kata-containers/ 2>/dev/null || echo "Failed to list directory"
+            fi
           fi
           
           # Cleanup
