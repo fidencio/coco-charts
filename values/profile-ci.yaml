@@ -23,6 +23,26 @@ kata-as-coco-runtime:
   snapshotter:
     setup: ["nydus"]
 
+  shims:
+    # Kata runtimes that are not for TEE
+    clh:
+      enabled: false
+
+    cloud-hypervisor:
+      enabled: false
+
+    dragonball:
+      enabled: false
+
+    fc:
+      enabled: false
+
+    qemu:
+      enabled: false
+
+    qemu-runtime-rs:
+      enabled: false
+
   # Default shim per architecture
   defaultShim:
     amd64: qemu-coco-dev
