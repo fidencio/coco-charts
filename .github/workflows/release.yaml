@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  packages: write
+  contents: write  # Required for creating releases and tags
+  packages: write  # Required for pushing to GitHub Container Registry
 
 jobs:
   release:
@@ -17,6 +17,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      
+      - name: Install yq
+        run: |
+          echo "📦 Installing yq..."
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
       
       - name: Read and validate versions from Chart.yaml
         id: read_version
@@ -75,14 +82,21 @@ jobs:
       
       - name: Update Helm dependencies
         run: |
+          echo "📦 Updating Helm dependencies..."
           helm dependency update
           echo "✅ Helm dependencies updated"
+          echo "📋 Dependencies will be included in the chart package"
       
       - name: Package Helm chart
         run: |
+          echo "📦 Packaging Helm chart with dependencies..."
           helm package . --destination .cr-release-packages
           echo "✅ Helm chart packaged"
+          echo "📋 Package contents:"
           ls -lh .cr-release-packages/
+          echo ""
+          echo "📋 Verifying package includes dependencies:"
+          tar -tzf .cr-release-packages/confidential-containers-*.tgz | head -20
       
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -128,12 +142,6 @@ jobs:
             -f https://raw.githubusercontent.com/${{ github.repository }}/v${VERSION}/values/kata-s390x.yaml \\
             --namespace coco-system
           
-          # aarch64 (ARM64)
-          helm install coco oci://ghcr.io/${{ github.repository_owner }}/charts/confidential-containers \\
-            --version ${VERSION} \\
-            -f https://raw.githubusercontent.com/${{ github.repository }}/v${VERSION}/values/kata-aarch64.yaml \\
-            --namespace coco-system
-          
           # peer-pods (remote)
           helm install coco oci://ghcr.io/${{ github.repository_owner }}/charts/confidential-containers \\
             --version ${VERSION} \\
@@ -151,7 +159,6 @@ jobs:
           
           - x86_64 (Intel/AMD with SNP, TDX, NVIDIA GPU support)
           - s390x (IBM Z with Secure Execution)
-          - aarch64 (ARM64)
           - peer-pods (Cloud API Adaptor integration)
           
           ## Documentation
@@ -170,21 +177,6 @@ jobs:
           cat release-notes.md
           echo "release_notes_file=release-notes.md" >> "${GITHUB_OUTPUT}"
       
-      - name: Commit Chart.lock if changed
-        run: |
-          VERSION="${{ steps.read_version.outputs.version }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Only commit if Chart.lock has changed
-          if git diff --quiet Chart.lock; then
-            echo "ℹ️  Chart.lock unchanged, nothing to commit"
-          else
-            git add Chart.lock
-            git commit -m "Release v${VERSION}: Update Chart.lock"
-            echo "✅ Committed Chart.lock changes"
-          fi
-      
       - name: Create and push tag
         run: |
           VERSION="${{ steps.read_version.outputs.version }}"
@@ -192,16 +184,6 @@ jobs:
           git push origin "v${VERSION}"
           
           echo "✅ Created and pushed tag v${VERSION}"
-      
-      - name: Push changes if any
-        run: |
-          # Only push if there are commits to push
-          if git diff --quiet origin/${{ github.ref_name }}..HEAD; then
-            echo "ℹ️  No changes to push"
-          else
-            git push origin HEAD:${{ github.ref_name }}
-            echo "✅ Pushed changes to ${{ github.ref_name }}"
-          fi
       
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
